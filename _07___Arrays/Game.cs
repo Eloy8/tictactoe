@@ -18,6 +18,7 @@ namespace _07___Arrays
                 Game game = new Game();
                 game.renderGame();
                 game.inputHandler();
+                // Minimum amount of turns to win is 5
                 if (currentTurn > 4)
                 {
                     game.checkGame();
@@ -29,7 +30,7 @@ namespace _07___Arrays
         private void checkGame()
         {
             string weHaveAWinner = checkIfGameFinished();
-            if (maxTurns > currentTurn && weHaveAWinner != null)
+            if (currentTurn >= maxTurns || weHaveAWinner != null)
             {
                 Console.WriteLine($"{(currentTurn == 9 ? "Game over, nobody won!" : $"Game won by {weHaveAWinner}, congratz!")}");
                 finishedGame = true;
@@ -39,34 +40,37 @@ namespace _07___Arrays
         private string checkIfGameFinished()
         {
             // CHECKS:
-            horizontalOrVerticalFinish(null, "0");
-            horizontalOrVerticalFinish(null, "1");
-            horizontalOrVerticalFinish(null, "2");
-            horizontalOrVerticalFinish("0", null);
-            horizontalOrVerticalFinish("1", null);
-            horizontalOrVerticalFinish("2", null);
+            string horizontal1Win = horizontalOrVerticalFinish(null, "0");
+            string horizontal2Win = horizontalOrVerticalFinish(null, "1");
+            string horizontal3Win = horizontalOrVerticalFinish(null, "2");
+            string vertical1Win = horizontalOrVerticalFinish("0", null);
+            string vertical2Win = horizontalOrVerticalFinish("1", null);
+            string vertical3Win = horizontalOrVerticalFinish("2", null);
             //diagonalFinish();
-            return null;
+            return horizontal1Win;
 
         }
 
-        private void horizontalOrVerticalFinish(string x, string y)
+        private string horizontalOrVerticalFinish(string x, string y)
         {
             if (y == null)
             {
                 // horizontal
                 string[] checks = new string[3];
                 int row = int.Parse(x);
+                //Console.WriteLine($"LENGTH {gameFields.GetLength(0)}, {row}");
                 for (int column = 0; column < gameFields.GetLength(0); column++)
                 {
-                    checks[row] = gameFields[row, column];
-                    Console.WriteLine($"Horizontal {gameFields[row, column]} on {row} and column {column}");
+                    checks[column] = gameFields[row, column];
+                    //Console.WriteLine($"Horizontal {gameFields[row, column]} on {row} and column {column}");
                 }
-                Console.WriteLine($"{checks[0]} {checks[1]} {checks[2]}");
-                if (checks[0].Equals(checks[1]) && checks[0].Equals(checks[2]))
+                //Console.WriteLine($"{checks[0]} {checks[1]} {checks[2]}");
+                if (string.Equals(checks[0], checks[1]) && string.Equals(checks[0], checks[2]))
                 {
                     finishedGame = true;
+                    return string.Equals(checks[0], Player1Mark) ? "Player 1" : "Player 2";
                 }
+                return null;
             }
             else
             {
@@ -76,14 +80,16 @@ namespace _07___Arrays
                 for (int row = 0; row < gameFields.GetLength(1); row++)
                 {
                     checks[row] = gameFields[row, column];
-                    Console.WriteLine($"Vertical {gameFields[row, column]} on {row} and column {column}");
+                    //Console.WriteLine($"Vertical {gameFields[row, column]} on {row} and column {column}");
                 }
 
-                Console.WriteLine($"{checks[0]} {checks[1]} {checks[2]}");
+                //Console.WriteLine($"{checks[0]} {checks[1]} {checks[2]}");
                 if (string.Equals(checks[0], checks[1]) && string.Equals(checks[0], checks[2]))
                 {
                     finishedGame = true;
+                    return string.Equals(checks[0], Player1Mark) ? "Player 1" : "Player 2";
                 }
+                return null;
             }
         }
 
