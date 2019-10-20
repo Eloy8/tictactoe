@@ -6,52 +6,77 @@ namespace _07___Arrays
     {
         private static string[,] fields = { { "1", "2", "3" }, { "4", "5", "6" }, { "7", "8", "9" } };
         private static string[,] gameFields = { { "1", "2", "3" }, { "4", "5", "6" }, { "7", "8", "9" } };
-        private static bool finishedGame = false;
+        private static string winner = null;
         private static int currentTurn = 1;
         private static int maxTurns = 9;
         private static string Player1Mark = "X";
         private static string Player2Mark = "O";
+        private static string COMMAND_MULTIPLAYER = "multiplayer";
+        private static string COMMAND_COMPUTER = "computer";
+        private static string COMMAND_EXIT = "exit";
+        private static string command = "";
+        private static bool gameLost = false;
+
         static void Main(string[] args)
         {
-            while (!finishedGame)
+            Console.WriteLine("Hello, welcome to Tic Tac Toe. Good luck and have fun! ;)");
+            while (command != COMMAND_EXIT)
             {
-                Game game = new Game();
-                game.renderGame();
-                game.inputHandler();
-                // Minimum amount of turns to win is 5
-                if (currentTurn > 4)
+                Console.WriteLine($"Type \"{COMMAND_MULTIPLAYER}\" or type \"{COMMAND_COMPUTER}\" to go against the computer! If you want to quit, type \"{COMMAND_EXIT}\".");
+                if (command != "")
                 {
-                    game.checkGame();
+                    Console.WriteLine($"Error: {command} is not a command! Please try again.");
                 }
-                currentTurn++;
+                command = Console.ReadLine().ToLower();
+                Console.Clear();
+                if (command == COMMAND_MULTIPLAYER)
+                {
+                    while (winner == null)
+                    {
+                        renderGame();
+                        inputHandler();
+                        // Minimum 5 turns to win
+                        if (currentTurn > 4)
+                        {
+                            checkGame();
+                        }
+                    }
+                    resetGame();
+                }
+                else if (command == COMMAND_COMPUTER)
+                {
+                    throw new NotImplementedException();
+                }
             }
         }
 
-        private void checkGame()
+        private static void checkGame()
         {
-            string weHaveAWinner = checkIfGameFinished();
-            if (currentTurn >= maxTurns || weHaveAWinner != null)
+            checkIfGameFinished();
+            if (currentTurn >= maxTurns || winner != null)
             {
-                Console.WriteLine($"{(currentTurn == 9 ? "Game over, nobody won!" : $"Game won by {weHaveAWinner}, congratz!")}");
-                finishedGame = true;
+                if (currentTurn >= maxTurns || gameLost)
+                {
+                    winner = "Nobody";
+                }
+                renderGame();
+                Console.WriteLine($"{(currentTurn == 9 || gameLost ? $"Game over. {winner} won!" : $"Game won by {winner}, congratz!")}");
+                Console.WriteLine($"\nDo you want to play another game?");
             }
         }
 
-        private string checkIfGameFinished()
+        private static void checkIfGameFinished()
         {
-            // CHECKS:
-            string horizontal1Win = horizontalOrVerticalFinish(null, "0");
-            string horizontal2Win = horizontalOrVerticalFinish(null, "1");
-            string horizontal3Win = horizontalOrVerticalFinish(null, "2");
-            string vertical1Win = horizontalOrVerticalFinish("0", null);
-            string vertical2Win = horizontalOrVerticalFinish("1", null);
-            string vertical3Win = horizontalOrVerticalFinish("2", null);
-            //diagonalFinish();
-            return horizontal1Win;
-
+            horizontalOrVerticalFinish(null, "0");
+            horizontalOrVerticalFinish(null, "1");
+            horizontalOrVerticalFinish(null, "2");
+            horizontalOrVerticalFinish("0", null);
+            horizontalOrVerticalFinish("1", null);
+            horizontalOrVerticalFinish("2", null);
+            diagonalFinish();
         }
 
-        private string horizontalOrVerticalFinish(string x, string y)
+        private static void horizontalOrVerticalFinish(string x, string y)
         {
             if (y == null)
             {
@@ -67,10 +92,8 @@ namespace _07___Arrays
                 //Console.WriteLine($"{checks[0]} {checks[1]} {checks[2]}");
                 if (string.Equals(checks[0], checks[1]) && string.Equals(checks[0], checks[2]))
                 {
-                    finishedGame = true;
-                    return string.Equals(checks[0], Player1Mark) ? "Player 1" : "Player 2";
+                    winnerHandler(checks[0]);
                 }
-                return null;
             }
             else
             {
@@ -86,19 +109,25 @@ namespace _07___Arrays
                 //Console.WriteLine($"{checks[0]} {checks[1]} {checks[2]}");
                 if (string.Equals(checks[0], checks[1]) && string.Equals(checks[0], checks[2]))
                 {
-                    finishedGame = true;
-                    return string.Equals(checks[0], Player1Mark) ? "Player 1" : "Player 2";
+                    winnerHandler(checks[0]);
                 }
-                return null;
             }
         }
 
-        private void diagonalFinish()
+        private static void diagonalFinish()
         {
-            throw new NotImplementedException();
+            if (string.Equals(gameFields[0, 0], gameFields[1, 1]) && string.Equals(gameFields[0, 0], gameFields[2, 2]))
+            {
+                winnerHandler(gameFields[0, 0]);
+
+            }
+            else if (string.Equals(gameFields[2, 0], gameFields[1, 1]) && string.Equals(gameFields[2, 0], gameFields[0, 2]))
+            {
+                winnerHandler(gameFields[2, 0]);
+            }
         }
 
-        private void inputHandler()
+        private static void inputHandler()
         {
             try
             {
@@ -111,16 +140,18 @@ namespace _07___Arrays
                     return;
                 }
                 Coordinates coordinates = inputValidator(input);
-                Console.WriteLine($"coordinates {coordinates}");
+                //Console.WriteLine($"coordinates {coordinates}");
                 //Console.Clear();
                 if (coordinates != null)
                 {
+                    currentTurn++;
                     gameFields[coordinates.Row, coordinates.Column] = currentTurn % 2 == 0 ? Player1Mark : Player2Mark;
+                    Console.Clear();
                 }
                 else
                 {
+                    Console.Clear();
                     Console.WriteLine($"Number {input} is not available, please try again!");
-                    return;
                 }
             }
             catch (FormatException e)
@@ -129,18 +160,22 @@ namespace _07___Arrays
                 Console.WriteLine("Please enter a valid number!", e);
             }
         }
+        private static void winnerHandler(string arraySymbol)
+        {
+            winner = string.Equals(arraySymbol, Player1Mark) ? "Player 1" : "Player 2";
+        }
 
         private static Coordinates inputValidator(int input)
         {
             for (int i = 0; i < gameFields.GetLength(0); i++)
             {
-                Console.WriteLine($"Row {i}");
+                //Console.WriteLine($"Row {i}");
                 for (int j = 0; j < gameFields.GetLength(1); j++)
                 {
-                    Console.WriteLine($"Column {j}, value {gameFields[i, j]}");
+                    //Console.WriteLine($"Column {j}, value {gameFields[i, j]}");
                     if (gameFields[i, j] == input.ToString())
                     {
-                        Console.WriteLine($"test {gameFields[i, j] == input.ToString()}");
+                        //Console.WriteLine($"test {gameFields[i, j] == input.ToString()}");
                         Coordinates coordinates = new Coordinates(i, j);
                         return coordinates;
                     }
@@ -149,7 +184,7 @@ namespace _07___Arrays
             return null;
         }
 
-        private void renderGame()
+        private static void renderGame()
         {
             //Console.Clear();
             Console.WriteLine("   |   |   ");
@@ -161,6 +196,14 @@ namespace _07___Arrays
             Console.WriteLine("   |   |   ");
             Console.WriteLine($" {gameFields[2, 0]} | {gameFields[2, 1]} | {gameFields[2, 2]} ");
             Console.WriteLine("   |   |   ");
+        }
+
+        private static void resetGame()
+        {
+            currentTurn = 0;
+            gameFields = fields;
+            winner = null;
+            command = "";
         }
     }
 }
