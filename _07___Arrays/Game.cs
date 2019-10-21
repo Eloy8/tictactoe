@@ -40,8 +40,6 @@ namespace _07___Arrays
                         // Minimum 5 turns to win
                         if (currentTurn > 4)
                         {
-                            countWinPossibilities();
-                            gameWinPossibilities = (int[,])winPossibilities.Clone();
                             checkGame();
                         }
                     }
@@ -73,12 +71,14 @@ namespace _07___Arrays
                     }
                 }
             }
+            gameWinPossibilities = (int[,])winPossibilities.Clone();
         }
 
         private static void checkGame()
         {
             // Is it still possible to win?!
             checkIfGameFinished();
+            countWinPossibilities();
             if (currentTurn >= maxTurns || winner != null || noWinners)
             {
                 if ((currentTurn >= maxTurns || noWinners) && winner == null)
@@ -115,7 +115,6 @@ namespace _07___Arrays
                     checks[column] = gameFields[row, column];
                     //Console.WriteLine($"Horizontal {gameFields[row, column]} on {row} and column {column}");
                 }
-                //Console.WriteLine($"{checks[0]} {checks[1]} {checks[2]}");
                 if (string.Equals(checks[0], checks[1]) && string.Equals(checks[0], checks[2]))
                 {
                     winnerHandler(checks[0]);
@@ -141,6 +140,7 @@ namespace _07___Arrays
                 {
                     checks[row] = gameFields[row, column];
                 }
+                Console.WriteLine($"VERTICAL {checks[0]} {checks[1]} {checks[2]}");
                 if (string.Equals(checks[0], checks[1]) && string.Equals(checks[0], checks[2]))
                 {
                     winnerHandler(checks[0]);
@@ -272,8 +272,10 @@ namespace _07___Arrays
 
         private static void resetGame()
         {
-            currentTurn = 0;
-            gameFields = fields;
+            Random rand = new Random();
+            currentTurn = rand.NextDouble() >= 0.5 ? 1 : 0;
+            maxTurns = currentTurn + 9;
+            gameFields = (string[,])fields.Clone();
             winner = null;
             command = "";
             amountOfNonPossibilities = 0;
