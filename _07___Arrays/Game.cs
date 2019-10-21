@@ -47,7 +47,14 @@ namespace _07___Arrays
                 }
                 else if (command == COMMAND_COMPUTER)
                 {
-                    throw new NotImplementedException();
+                    while (winner == null)
+                    {
+                        renderGame();
+                        inputHandler();
+                        // Computer method here!
+                        checkGame();
+                    }
+                    resetGame();
                 }
             }
         }
@@ -59,11 +66,9 @@ namespace _07___Arrays
             {
                 for (int j = 0; j < gameFields.GetLength(1); j++)
                 {
-                    Console.WriteLine(gameWinPossibilities[i, j]);
                     if (gameWinPossibilities[i, j] == 0)
                     {
                         amountOfNonPossibilities++;
-                        Console.WriteLine($"ZERO {amountOfNonPossibilities}");
                         if (amountOfNonPossibilities == gameWinPossibilities.Length)
                         {
                             noWinners = true;
@@ -76,7 +81,6 @@ namespace _07___Arrays
 
         private static void checkGame()
         {
-            // Is it still possible to win?!
             checkIfGameFinished();
             countWinPossibilities();
             if (currentTurn >= maxTurns || winner != null || noWinners)
@@ -109,11 +113,9 @@ namespace _07___Arrays
                 // horizontal
                 string[] checks = new string[3];
                 int row = int.Parse(x);
-                //Console.WriteLine($"LENGTH {gameFields.GetLength(0)}, {row}");
                 for (int column = 0; column < gameFields.GetLength(0); column++)
                 {
                     checks[column] = gameFields[row, column];
-                    //Console.WriteLine($"Horizontal {gameFields[row, column]} on {row} and column {column}");
                 }
                 if (string.Equals(checks[0], checks[1]) && string.Equals(checks[0], checks[2]))
                 {
@@ -140,12 +142,10 @@ namespace _07___Arrays
                 {
                     checks[row] = gameFields[row, column];
                 }
-                Console.WriteLine($"VERTICAL {checks[0]} {checks[1]} {checks[2]}");
                 if (string.Equals(checks[0], checks[1]) && string.Equals(checks[0], checks[2]))
                 {
                     winnerHandler(checks[0]);
                 }
-                // BUG: GAAT NOG NIET HELEMAAL LEKKER
                 else
                 {
                     // No winner, so check the other possibilities
@@ -203,7 +203,7 @@ namespace _07___Arrays
         {
             try
             {
-                Console.WriteLine($"Player {(currentTurn % 2 == 1 ? $"1 ({Player1Mark})" : $"2 ({Player2Mark})")}, please enter your number:");
+                Console.WriteLine($"Player {(command == COMMAND_MULTIPLAYER && currentTurn % 2 == 0 ? $"2 ({Player2Mark})" : $"1 ({Player1Mark})")}, please enter your number:");
                 int input = int.Parse(Console.ReadLine());
                 if (input < 0 || input > 9)
                 {
@@ -212,12 +212,10 @@ namespace _07___Arrays
                     return;
                 }
                 Coordinates coordinates = inputValidator(input);
-                //Console.WriteLine($"coordinates {coordinates}");
-                //Console.Clear();
                 if (coordinates != null)
                 {
                     currentTurn++;
-                    gameFields[coordinates.Row, coordinates.Column] = currentTurn % 2 == 0 ? Player1Mark : Player2Mark;
+                    gameFields[coordinates.Row, coordinates.Column] = command == COMMAND_MULTIPLAYER && currentTurn % 2 == 1 ? Player2Mark : Player1Mark;
                     Console.Clear();
                 }
                 else
@@ -242,13 +240,10 @@ namespace _07___Arrays
         {
             for (int i = 0; i < gameFields.GetLength(0); i++)
             {
-                //Console.WriteLine($"Row {i}");
                 for (int j = 0; j < gameFields.GetLength(1); j++)
                 {
-                    //Console.WriteLine($"Column {j}, value {gameFields[i, j]}");
                     if (gameFields[i, j] == input.ToString())
                     {
-                        //Console.WriteLine($"test {gameFields[i, j] == input.ToString()}");
                         Coordinates coordinates = new Coordinates(i, j);
                         return coordinates;
                     }
@@ -273,7 +268,7 @@ namespace _07___Arrays
         private static void resetGame()
         {
             Random rand = new Random();
-            currentTurn = rand.NextDouble() >= 0.5 ? 1 : 0;
+            currentTurn = command == COMMAND_MULTIPLAYER && rand.NextDouble() <= 0.5 ? 0 : 1;
             maxTurns = currentTurn + 9;
             gameFields = (string[,])fields.Clone();
             winner = null;
