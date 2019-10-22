@@ -51,10 +51,44 @@ namespace _07___Arrays
                     {
                         renderGame();
                         inputHandler();
-                        // Computer method here!
                         checkGame();
+                        if (winner == null)
+                        {
+                            computerHandler();
+                            checkGame();
+                        }
                     }
                     resetGame();
+                }
+            }
+        }
+
+        private static void computerHandler()
+        {
+            checkIfGameFinished();
+            countWinPossibilities();
+            computerTurn();
+            gameWinPossibilities = (int[,])winPossibilities.Clone();
+        }
+
+        private static void computerTurn()
+        {
+            renderGame();
+            Console.WriteLine($"Computer ({Player2Mark}) is entering its number...");
+            for (int k = 5; k > 0; k--)
+            {
+                for (int i = 0; i < gameWinPossibilities.GetLength(0); i++)
+                {
+                    for (int j = 0; j < gameWinPossibilities.GetLength(1); j++)
+                    {
+                        if (gameWinPossibilities[i, j] == k && gameFields[i, j] != Player1Mark)
+                        {
+                            System.Threading.Thread.Sleep(2000);
+                            gameFields[i, j] = Player2Mark;
+                            Console.Clear();
+                            return;
+                        }
+                    }
                 }
             }
         }
@@ -76,13 +110,13 @@ namespace _07___Arrays
                     }
                 }
             }
-            gameWinPossibilities = (int[,])winPossibilities.Clone();
         }
 
         private static void checkGame()
         {
             checkIfGameFinished();
             countWinPossibilities();
+            gameWinPossibilities = (int[,])winPossibilities.Clone();
             if (currentTurn >= maxTurns || winner != null || noWinners)
             {
                 if ((currentTurn >= maxTurns || noWinners) && winner == null)
@@ -123,12 +157,21 @@ namespace _07___Arrays
                 }
                 else
                 {
+                    int column;
                     // No winner, so check the other possibilities
                     if (containsBothPlayerMarks(checks))
                     {
-                        for (int column = 0; column < gameFields.GetLength(0); column++)
+                        for (column = 0; column < gameFields.GetLength(0); column++)
                         {
                             gameWinPossibilities[row, column]--;
+                        }
+                    }
+                    else
+                    {
+                        column = playerIsCloseToWinning(checks);
+                        if (column > -1)
+                        {
+                            gameWinPossibilities[row, column] = 5;
                         }
                     }
                 }
@@ -148,16 +191,48 @@ namespace _07___Arrays
                 }
                 else
                 {
+                    int row;
                     // No winner, so check the other possibilities
                     if (containsBothPlayerMarks(checks))
                     {
-                        for (int row = 0; row < gameFields.GetLength(1); row++)
+                        for (row = 0; row < gameFields.GetLength(1); row++)
                         {
                             gameWinPossibilities[row, column]--;
                         }
                     }
+                    else
+                    {
+                        row = playerIsCloseToWinning(checks);
+                        if (row > -1)
+                        {
+                            gameWinPossibilities[row, column] = 5;
+                        }
+                    }
                 }
             }
+        }
+
+        private static int playerIsCloseToWinning(string[] fields)
+        {
+            int playerMarkOccurence = 0;
+            for (int i = 0; i < fields.Length; i++)
+            {
+                if (fields[i] == Player1Mark || fields[i] == Player2Mark)
+                {
+                    playerMarkOccurence++;
+                }
+                if (playerMarkOccurence == 2)
+                {
+                    for (int j = 0; j < fields.Length; j++)
+                    {
+                        if (fields[j] != Player1Mark && fields[j] != Player2Mark)
+                        {
+                            return j;
+                        }
+                    }
+                }
+            }
+            return -1;
         }
 
         private static void diagonalFinish()
@@ -233,7 +308,15 @@ namespace _07___Arrays
 
         private static void winnerHandler(string arraySymbol)
         {
-            winner = string.Equals(arraySymbol, Player1Mark) ? "Player 1" : "Player 2";
+            if (string.Equals(arraySymbol, Player2Mark))
+            {
+                winner = command == COMMAND_MULTIPLAYER ? "Player 2" : "Computer";
+            }
+            else
+            {
+                winner = "Player 1";
+            }
+
         }
 
         private static Coordinates inputValidator(int input)
