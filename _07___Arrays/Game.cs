@@ -124,7 +124,7 @@ namespace _07___Arrays
                     winner = "Nobody";
                 }
                 renderGame();
-                Console.WriteLine($"{(currentTurn == maxTurns || noWinners ? $"Game over. {winner} won!" : $"Game won by {winner}, congratz!")}");
+                Console.WriteLine($"{(currentTurn == maxTurns || noWinners ? $"Game over. {winner} won!" : $"Game won by {winner}, {(command == COMMAND_MULTIPLAYER ? "congratz!" : "too bad!")}")}");
                 Console.WriteLine($"\nDo you want to play another game?");
             }
         }
