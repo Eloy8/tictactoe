@@ -3,21 +3,32 @@ namespace _07___Arrays
 {
     class Game
     {
-        private static string[,] fields = { { "1", "2", "3" }, { "4", "5", "6" }, { "7", "8", "9" } };
+        private static readonly string[,] fields = { { "1", "2", "3" }, { "4", "5", "6" }, { "7", "8", "9" } };
+        private static readonly int[,] winPossibilities = { { 3, 2, 3 }, { 2, 4, 2 }, { 3, 2, 3 } };
+        const string COMMAND_MULTIPLAYER = "multiplayer";
+        const string COMMAND_COMPUTER = "computer";
+        const string COMMAND_EXIT = "exit";
+        const string Computer = "Computer";
+        const string Nobody = "Nobody";
+        const string Player1 = "Player 1";
+        const string Player2 = "Player 2";
+        const string Player1Mark = "X";
+        const string Player2Mark = "O";
+
         private static string[,] gameFields = { { "1", "2", "3" }, { "4", "5", "6" }, { "7", "8", "9" } };
-        private static int[,] winPossibilities = { { 3, 2, 3 }, { 2, 4, 2 }, { 3, 2, 3 } };
         private static int[,] gameWinPossibilities = { { 3, 2, 3 }, { 2, 4, 2 }, { 3, 2, 3 } };
+        private static int amountOfNonPossibilities;
+        private static bool noWinners = false;
         private static string winner = null;
-        private static int amountOfNonPossibilities = 0;
+        private static string command = "";
         private static int currentTurn = 1;
         private static int maxTurns = 10;
-        private static string Player1Mark = "X";
-        private static string Player2Mark = "O";
-        private static string COMMAND_MULTIPLAYER = "multiplayer";
-        private static string COMMAND_COMPUTER = "computer";
-        private static string COMMAND_EXIT = "exit";
-        private static string command = "";
-        private static bool noWinners = false;
+
+        // TO DO:
+        // Put regions inside of seperate classes!
+        // refactoren horizontale en verticale check? (met for loop en tostring)
+        // horizontalOrVerticalFinish dubbele code in een stoppen!
+        // Beginnen vanuit de main ipv direct game (methodenaam startGame()?)
 
         static void Main(string[] args)
         {
@@ -31,30 +42,22 @@ namespace _07___Arrays
                 }
                 command = Console.ReadLine().ToLower();
                 Console.Clear();
-                if (command == COMMAND_MULTIPLAYER)
+                if (command == COMMAND_MULTIPLAYER || command == COMMAND_COMPUTER)
                 {
                     while (winner == null)
                     {
                         renderGame();
-                        inputHandler();
-                        // Minimum 5 turns to win
-                        if (currentTurn > 4)
+                        if (currentTurn % 2 == 0 && command == COMMAND_COMPUTER)
                         {
                             checkGame();
-                        }
-                    }
-                    resetGame();
-                }
-                else if (command == COMMAND_COMPUTER)
-                {
-                    while (winner == null)
-                    {
-                        renderGame();
-                        inputHandler();
-                        checkGame();
-                        if (winner == null)
-                        {
                             computerHandler();
+                        }
+                        else
+                        {
+                            playerHandler();
+                        }
+                        if (currentTurn > 4)
+                        {
                             checkGame();
                         }
                     }
@@ -63,17 +66,53 @@ namespace _07___Arrays
             }
         }
 
+        #region playerhandler
+        private static void playerHandler()
+        {
+            try
+            {
+                Console.WriteLine($"Player {(command == COMMAND_MULTIPLAYER && currentTurn % 2 == 0 ? $"2 ({Player2Mark})" : $"1 ({Player1Mark})")}, please enter your number:");
+                int input = int.Parse(Console.ReadLine());
+                if (input < 0 || input > 9)
+                {
+                    Console.Clear();
+                    Console.WriteLine("Please enter a number between 0 and 9!");
+                    return;
+                }
+                Coordinates coordinates = inputValidator(input);
+                if (coordinates != null)
+                {
+                    currentTurn++;
+                    gameFields[coordinates.Row, coordinates.Column] = command == COMMAND_MULTIPLAYER && currentTurn % 2 == 1 ? Player2Mark : Player1Mark;
+                    Console.Clear();
+                }
+                else
+                {
+                    Console.Clear();
+                    Console.WriteLine($"Number {input} is already taken, please try again!");
+                }
+            }
+            catch (FormatException e)
+            {
+                Console.Clear();
+                Console.WriteLine("Please enter a valid number!", e);
+            }
+        }
+        #endregion
+
+        #region computer
+
         private static void computerHandler()
         {
             checkIfGameFinished();
             countWinPossibilities();
             computerTurn();
             gameWinPossibilities = (int[,])winPossibilities.Clone();
+            currentTurn++;
         }
 
         private static void computerTurn()
         {
-            renderGame();
             Console.WriteLine($"Computer ({Player2Mark}) is entering its number...");
             for (int k = 5; k > 0; k--)
             {
@@ -112,23 +151,31 @@ namespace _07___Arrays
             }
         }
 
-        private static void checkGame()
+        private static int playerIsCloseToWinning(string[] fields)
         {
-            checkIfGameFinished();
-            countWinPossibilities();
-            gameWinPossibilities = (int[,])winPossibilities.Clone();
-            if (currentTurn >= maxTurns || winner != null || noWinners)
+            int playerMarkOccurence = 0;
+            for (int i = 0; i < fields.Length; i++)
             {
-                if ((currentTurn >= maxTurns || noWinners) && winner == null)
+                if (fields[i] == Player1Mark || fields[i] == Player2Mark)
                 {
-                    winner = "Nobody";
+                    playerMarkOccurence++;
                 }
-                renderGame();
-                Console.WriteLine($"{(currentTurn == maxTurns || noWinners ? $"Game over. {winner} won!" : $"Game won by {winner}, {(command == COMMAND_MULTIPLAYER ? "congratz!" : "too bad!")}")}");
-                Console.WriteLine($"\nDo you want to play another game?");
+                if (playerMarkOccurence == 2)
+                {
+                    for (int j = 0; j < fields.Length; j++)
+                    {
+                        if (fields[j] != Player1Mark && fields[j] != Player2Mark)
+                        {
+                            return j;
+                        }
+                    }
+                }
             }
+            return -1;
         }
+        #endregion
 
+        #region gameChecker
         private static void checkIfGameFinished()
         {
             horizontalOrVerticalFinish(null, "0");
@@ -212,29 +259,6 @@ namespace _07___Arrays
             }
         }
 
-        private static int playerIsCloseToWinning(string[] fields)
-        {
-            int playerMarkOccurence = 0;
-            for (int i = 0; i < fields.Length; i++)
-            {
-                if (fields[i] == Player1Mark || fields[i] == Player2Mark)
-                {
-                    playerMarkOccurence++;
-                }
-                if (playerMarkOccurence == 2)
-                {
-                    for (int j = 0; j < fields.Length; j++)
-                    {
-                        if (fields[j] != Player1Mark && fields[j] != Player2Mark)
-                        {
-                            return j;
-                        }
-                    }
-                }
-            }
-            return -1;
-        }
-
         private static void diagonalFinish()
         {
             string[] diagonalFields1 = { gameFields[0, 0], gameFields[1, 1], gameFields[2, 2] };
@@ -267,57 +291,11 @@ namespace _07___Arrays
 
         private static bool containsBothPlayerMarks(string[] fields)
         {
-            if (Array.IndexOf(fields, Player1Mark) > -1 && Array.IndexOf(fields, Player2Mark) > -1)
-            {
-                return true;
-            }
-            return false;
+            return Array.IndexOf(fields, Player1Mark) > -1 && Array.IndexOf(fields, Player2Mark) > -1;
         }
+        #endregion
 
-        private static void inputHandler()
-        {
-            try
-            {
-                Console.WriteLine($"Player {(command == COMMAND_MULTIPLAYER && currentTurn % 2 == 0 ? $"2 ({Player2Mark})" : $"1 ({Player1Mark})")}, please enter your number:");
-                int input = int.Parse(Console.ReadLine());
-                if (input < 0 || input > 9)
-                {
-                    Console.Clear();
-                    Console.WriteLine("Please enter a number between 0 and 9!");
-                    return;
-                }
-                Coordinates coordinates = inputValidator(input);
-                if (coordinates != null)
-                {
-                    currentTurn++;
-                    gameFields[coordinates.Row, coordinates.Column] = command == COMMAND_MULTIPLAYER && currentTurn % 2 == 1 ? Player2Mark : Player1Mark;
-                    Console.Clear();
-                }
-                else
-                {
-                    Console.Clear();
-                    Console.WriteLine($"Number {input} is already taken, please try again!");
-                }
-            }
-            catch (FormatException e)
-            {
-                Console.Clear();
-                Console.WriteLine("Please enter a valid number!", e);
-            }
-        }
-
-        private static void winnerHandler(string arraySymbol)
-        {
-            if (string.Equals(arraySymbol, Player2Mark))
-            {
-                winner = command == COMMAND_MULTIPLAYER ? "Player 2" : "Computer";
-            }
-            else
-            {
-                winner = "Player 1";
-            }
-
-        }
+        #region gameMechanics
 
         private static Coordinates inputValidator(int input)
         {
@@ -335,23 +313,57 @@ namespace _07___Arrays
             return null;
         }
 
+        private static void checkGame()
+        {
+            checkIfGameFinished();
+            countWinPossibilities();
+            gameWinPossibilities = (int[,])winPossibilities.Clone();
+            if (currentTurn >= maxTurns || winner != null || noWinners)
+            {
+                if ((currentTurn >= maxTurns || noWinners) && winner == null)
+                {
+                    winner = Nobody;
+                }
+                renderGame();
+                Console.WriteLine($"{(currentTurn == maxTurns || noWinners ? $"Game over. {winner} won!" : $"Game won by {winner}, {(winner != Computer ? "congratz!" : "too bad!")}")}");
+                Console.WriteLine($"\nDo you want to play another game?");
+            }
+        }
+        #endregion
+
+        #region gameBasics
+
+        private static void winnerHandler(string arraySymbol)
+        {
+            if (string.Equals(arraySymbol, Player2Mark))
+            {
+                winner = command == COMMAND_MULTIPLAYER ? Player2 : Computer;
+            }
+            else
+            {
+                winner = Player1;
+            }
+        }
+
         private static void renderGame()
         {
-            Console.WriteLine("   |   |   ");
+            string emptyField = "   |   |   ";
+            string emptyFieldWithUnderline = "___|___|___";
+            Console.WriteLine(emptyField);
             Console.WriteLine($" {gameFields[0, 0]} | {gameFields[0, 1]} | {gameFields[0, 2]} ");
-            Console.WriteLine("___|___|___");
-            Console.WriteLine("   |   |   ");
+            Console.WriteLine(emptyFieldWithUnderline);
+            Console.WriteLine(emptyField);
             Console.WriteLine($" {gameFields[1, 0]} | {gameFields[1, 1]} | {gameFields[1, 2]} ");
-            Console.WriteLine("___|___|___");
-            Console.WriteLine("   |   |   ");
+            Console.WriteLine(emptyFieldWithUnderline);
+            Console.WriteLine(emptyField);
             Console.WriteLine($" {gameFields[2, 0]} | {gameFields[2, 1]} | {gameFields[2, 2]} ");
-            Console.WriteLine("   |   |   ");
+            Console.WriteLine(emptyField);
         }
 
         private static void resetGame()
         {
             Random rand = new Random();
-            currentTurn = command == COMMAND_MULTIPLAYER && rand.NextDouble() <= 0.5 ? 0 : 1;
+            currentTurn = rand.NextDouble() <= 0.5 ? 0 : 1;
             maxTurns = currentTurn + 9;
             gameFields = (string[,])fields.Clone();
             winner = null;
@@ -359,5 +371,6 @@ namespace _07___Arrays
             amountOfNonPossibilities = 0;
             noWinners = false;
         }
+        #endregion
     }
 }

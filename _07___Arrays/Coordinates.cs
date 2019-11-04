@@ -9,8 +9,8 @@
             Column = column;
         }
         //properties
-        public int Row { get; set; }
-        public int Column { get; set; }
+        public int Row { get; private set; }
+        public int Column { get; private set; }
 
         public override string ToString() => $"Coordinates: Row {Row}, Column {Column}";
     }
