@@ -30,39 +30,49 @@ namespace _07___Arrays
         // horizontalOrVerticalFinish dubbele code in een stoppen!
         // Beginnen vanuit de main ipv direct game (methodenaam startGame()?)
 
-        static void Main(string[] args)
+        public static void start()
         {
             Console.WriteLine("Hello, welcome to Tic Tac Toe. Good luck and have fun! ;)");
             while (command != COMMAND_EXIT)
             {
-                Console.WriteLine($"Type \"{COMMAND_MULTIPLAYER}\" or type \"{COMMAND_COMPUTER}\" to go against the computer! If you want to quit, type \"{COMMAND_EXIT}\".");
-                if (command != "")
+                commandInput();
+                commandHandler();
+            }
+        }
+
+        private static void commandInput()
+        {
+            Console.WriteLine($"Type \"{COMMAND_MULTIPLAYER}\" or type \"{COMMAND_COMPUTER}\" to go against the computer! If you want to quit, type \"{COMMAND_EXIT}\".");
+            if (command != "")
+            {
+                Console.WriteLine($"Error: {command} is not a command! Please try again.");
+            }
+            command = Console.ReadLine().ToLower();
+            Console.Clear();
+        }
+
+        private static void commandHandler()
+        {
+            if (command == COMMAND_MULTIPLAYER || command == COMMAND_COMPUTER)
+            {
+                while (winner == null)
                 {
-                    Console.WriteLine($"Error: {command} is not a command! Please try again.");
-                }
-                command = Console.ReadLine().ToLower();
-                Console.Clear();
-                if (command == COMMAND_MULTIPLAYER || command == COMMAND_COMPUTER)
-                {
-                    while (winner == null)
+                    renderGame();
+                    if (currentTurn % 2 == 0 && command == COMMAND_COMPUTER)
                     {
-                        renderGame();
-                        if (currentTurn % 2 == 0 && command == COMMAND_COMPUTER)
-                        {
-                            checkGame();
-                            computerHandler();
-                        }
-                        else
-                        {
-                            playerHandler();
-                        }
-                        if (currentTurn > 4)
-                        {
-                            checkGame();
-                        }
+                        checkGame();
+                        computerHandler();
                     }
-                    resetGame();
+                    else
+                    {
+                        playerHandler();
+                    }
+                    if (currentTurn > 4)
+                    {
+                        checkGame();
+                    }
                 }
+                resetGame();
             }
         }
 
